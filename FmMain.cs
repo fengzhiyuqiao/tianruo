@@ -3631,13 +3631,40 @@ namespace TrOCR
 //                var html = CommonHelper.PostStrData("https://fanyi.baidu.com/basetrans",
 //                    string.Concat("query=", HttpUtility.UrlEncode(Text.Trim()).Replace("+", "%20"), "&from=", text2,
 //                        "&to=", text3));
-                var html = TranslateHelper.BdTrans(content.Trim(), text2, text3);
+                /*var html = TranslateHelper.BdTrans(content.Trim(), text2, text3);
 				var jArray = JArray.Parse(((JObject)JsonConvert.DeserializeObject(html))["fanyi_list"].ToString());
 				foreach (var arr in jArray)
                 {
                     text = text + arr + "\r\n";
+                }*/
+
+
+
+                baidu_vip = CommonHelper.GetHtmlContent("https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=" + StaticValue.BD_API_ID + "&client_secret=" + StaticValue.BD_API_KEY);
+                if (string.IsNullOrEmpty(baidu_vip))
+                {
+                    MessageBox.Show("请检查密钥输入是否正确！", "提醒");
                 }
-			}
+
+                //var s = "{image" + HttpUtility.UrlEncode(Convert.ToBase64String(inArray)) + "&language_type=" + str;
+                var s = new JObject()
+                {
+                    {"q", content.Trim()},
+                    {"from",text2 },
+                    {"to",text3 },
+                };
+                var message = JsonConvert.SerializeObject(s);
+                var url = "https://aip.baidubce.com/rpc/2.0/mt/texttrans/v1?access_token=" +
+                              ((JObject)JsonConvert.DeserializeObject(baidu_vip))["access_token"];
+                var value = CommonHelper.PostUrl(url, message);
+                var jArray = JObject.Parse(((JObject)JsonConvert.DeserializeObject(value))["result"].ToString());
+                var fan = JArray.Parse(jArray["trans_result"].ToString());
+                foreach (var arr in fan)
+                {
+                    var c = arr["dst"].ToString();
+                    text = text + c + "\r\n";
+                }
+            }
 			catch (Exception)
 			{
 				text = "[百度接口报错]：\r\n1.接口请求出现问题等待修复。";

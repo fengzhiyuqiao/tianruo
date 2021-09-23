@@ -90,7 +90,38 @@ namespace TrOCR.Helper
                 return null;
             }
         }
+        public static string PostUrl(string url, string postData)
+        {
+            string result = "";
 
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+
+            req.Method = "POST";
+            req.ContentType = "application/json";
+
+            byte[] data = Encoding.UTF8.GetBytes(postData);
+
+            req.ContentLength = data.Length;
+
+            using (Stream reqStream = req.GetRequestStream())
+            {
+                reqStream.Write(data, 0, data.Length);
+
+                reqStream.Close();
+            }
+
+            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+
+            Stream stream = resp.GetResponseStream();
+
+            //获取响应内容
+            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                result = reader.ReadToEnd();
+            }
+
+            return result;
+        }
         public static string PostStrData(string url, string data, string cookie = "", string referer = "")
         {
             try
